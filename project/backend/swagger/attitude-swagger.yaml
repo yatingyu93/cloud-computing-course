@@ -1,0 +1,84 @@
+swagger: '2.0'
+info:
+  title: Attitude API
+  description: 'Get user attitude of a movie'
+  version: 1.0.0
+schemes:
+  - https
+basePath: /v1
+produces:
+  - application/json
+paths:
+  /attitudebot:
+    post:
+      summary: The endpoint for the Attitue API.
+      description: |
+        This API takes a uid, mid from the client and returns
+        one or more attitudes information as a response.
+      tags:
+        - Attitude
+      operationId: getAttitude
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/BotRequest'
+      responses:
+        '200':
+          description: Search response
+          schema:
+            $ref: '#/definitions/BotResponse'
+        '403':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  BotRequest:
+    type: object
+    properties:
+      messages:
+        type: array
+        items:
+          $ref: '#/definitions/Message'
+  BotResponse:
+    type: object
+    properties:
+      messages:
+        type: array
+        items:
+          $ref: '#/definitions/Message'
+  Message:
+    type: object
+    properties:
+      type:
+        type: string
+      unstructured:
+        $ref: '#/definitions/UnstructuredMessage'
+  UnstructuredMessage:
+    type: object
+    properties:
+      uid:
+        type: string
+      mid:
+        type: string
+      preference:
+        type: string
+      wishlist:
+        type: string
+      score:
+        type: string
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string

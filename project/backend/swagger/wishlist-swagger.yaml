@@ -1,0 +1,89 @@
+swagger: '2.0'
+info:
+  title: Wish List API
+  description: 'Get wishlist for user'
+  version: 1.0.0
+schemes:
+  - https
+basePath: /v1
+produces:
+  - application/json
+paths:
+  /wishlistbot:
+    post:
+      summary: The endpoint for the Wish List API.
+      description: |
+        This API takes a uid from the client and returns
+        one or more movie information as a response.
+      tags:
+        - Wishlist
+      operationId: getWishlistByUid
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/BotRequest'
+      responses:
+        '200':
+          description: Search response
+          schema:
+            $ref: '#/definitions/BotResponse'
+        '403':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  BotRequest:
+    type: object
+    properties:
+      messages:
+        type: array
+        items:
+          $ref: '#/definitions/Message'
+  BotResponse:
+    type: object
+    properties:
+      messages:
+        type: array
+        items:
+          $ref: '#/definitions/Message'
+  Message:
+    type: object
+    properties:
+      type:
+        type: string
+      unstructured:
+        $ref: '#/definitions/UnstructuredMessage'
+  UnstructuredMessage:
+    type: object
+    properties:
+      mid:
+        type: string
+      title:
+        type: string
+      overview:
+        type: string
+      release_date:
+        type: string
+        format: date
+      rating:
+        type: string
+      poster:
+        type: string
+      genres:
+        type: string
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string

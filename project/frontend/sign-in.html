@@ -1,0 +1,106 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <title>Sign In</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+    <link href="./assets/css/my.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="bg">
+
+
+<div class="container" style="display: block">
+    <div class="mycontainer">
+        <div class="input-area">
+          <div style="height:20px"></div>
+            <div style="text-align:center"><img class="logo-web" src="./assets/img/logo.png"></div>
+            <div>
+              <form id="signin-form" class="input-form" action="./home.html">
+                <div style="height:40px"></div>
+                <input class="input-field input-text" type="text" id="email-input" placeholder="Email"><br>
+                <div class="space-dividor"></div>
+                <input class="input-field input-text" type="password" id="password-input" placeholder="Password"><br>
+                <div class="space-dividor"></div>
+                <input class="input-field input-submit" type="submit" id="sign-in-button" value="Sign In">
+              </form>
+              <div style="height:10px"></div>
+              <p class="sign-in-text">Don't have an account?  <a href="./sign-up.html" style="text-decoration: underline;">Sign Up</a></p>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /.container -->
+</div>
+
+
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/aws-sdk/2.205.0/aws-sdk.min.js"></script>
+<script src="assets/js/amazon-cognito-identity.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('.container').show();
+        AWS.config.region = 'us-east-1';
+        AmazonCognitoIdentity.region = 'us-east-1';
+        var poolData = {
+            UserPoolId : 'us-east-1_jDv7ZZJB9',
+            ClientId : '2najgqvdlpscumkfl2r5smpi3k'
+        };
+        var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+
+        $("#signin-form").submit(function(e) {
+            e.preventDefault();
+
+            var authenticationData = {
+                Username : $('#email-input').val(),
+                Password : $('#password-input').val(),
+            };
+            var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+
+            var userData = {
+                Username : $('#email-input').val(),
+                Pool : userPool
+            };
+            var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+            cognitoUser.authenticateUser(authenticationDetails, {
+                onSuccess: function (result) {
+                    var credentialParams = {
+                        IdentityPoolId : "us-east-1:d505f746-1e59-4fee-b141-649f84d8f757",
+                        Logins : {'cognito-idp.us-east-1.amazonaws.com/us-east-1_jDv7ZZJB9' : result.getIdToken().getJwtToken()}
+                    };
+                    var credentials = new AWS.CognitoIdentityCredentials(credentialParams);
+                    credentials.clearCachedId();
+                    credentials = new AWS.CognitoIdentityCredentials(credentialParams);
+                    AWS.config.credentials = credentials;
+                    AWS.config.credentials.refresh((error) => {
+                        if (error) {
+                            console.error(error);
+                        } else {
+                            console.log('Successfully logged!');
+                            window.location = "./home.html";
+                        }
+                    });
+                },
+                onFailure: function(err) {
+                    alert(err.message || JSON.stringify(err));
+                },
+            });
+        });
+
+    });
+</script>
+</body>
+
+</html>

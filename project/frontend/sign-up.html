@@ -1,0 +1,158 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <title>Sign Up</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">
+    <!-- Custom styles for this template -->
+    <link href="./assets/css/my.css" rel="stylesheet">
+
+</head>
+
+
+
+<body>
+<div class="bg">
+<div class="container" style="display: block">
+    <div class="mycontainer">
+        <div class="input-area">
+          <div style="height:20px"></div>
+            <div style="text-align:center"><img class="logo-web" src="./assets/img/logo.png"></div>
+
+            <div style="display: none" id="dialog-form" title="Confirm User">
+                <form>
+                    <fieldset>
+                        <label for="code">Code</label>
+                        <input type="text" name="code" id="code" class="text ui-widget-content ui-corner-all">
+                        <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+                    </fieldset>
+                </form>
+            </div>
+
+            <div>
+              <form id="signup_form" class="input-form" action="./home.html">
+                <div style="height:40px"></div>
+                <input class="input-field input-text" type="email" id="email-input" name="username" placeholder="Email"><br>
+                <div style="height:10px"></div>
+                <input class="input-field input-text" type="text" id="username-input" name="name" placeholder="Name"><br>
+                <div style="height:10px"></div>
+                <input class="input-field input-text" type="password" id="password-input" name="password" placeholder="Password"><br>
+                <div style="height:10px"></div>
+                <input class="input-field input-submit" type="submit" id="sign-in-button" value="Create Account"></input>
+              </form>
+              <div style="height:10px"></div>
+              <p class="sign-in-text">Already have an account?  <a href="./sign-in.html" style="text-decoration: underline;">Sign In</a></p>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /.container -->
+</div>
+
+
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/aws-sdk/2.205.0/aws-sdk.min.js"></script>
+<script src="assets/js/amazon-cognito-identity.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.container').show();
+
+        AWS.config.region = 'us-east-1';
+
+        AmazonCognitoIdentity.region = 'us-east-1';
+        var poolData = {
+            UserPoolId : 'us-east-1_jDv7ZZJB9',
+            ClientId : '2najgqvdlpscumkfl2r5smpi3k'
+        };
+        var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+
+        function confirmUser(username, password, code) {
+            var userData = {
+                Username : username,
+                Pool : userPool
+            };
+            var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+            cognitoUser.confirmRegistration(code, true, function(err, result) {
+                if (err) {
+                    alert(err.message || JSON.stringify(err));
+                    return;
+                }
+                var authenticationData = {
+                    Username : username,
+                    Password : password
+                };
+                var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+
+                cognitoUser.authenticateUser(authenticationDetails, {
+                onSuccess: function (result) {
+                    var credentialParams = {
+                        IdentityPoolId : "us-east-1:d505f746-1e59-4fee-b141-649f84d8f757",
+                        Logins : {'cognito-idp.us-east-1.amazonaws.com/us-east-1_jDv7ZZJB9' : result.getIdToken().getJwtToken()}
+                    };
+                    var credentials = new AWS.CognitoIdentityCredentials(credentialParams);
+                    credentials.clearCachedId();
+                    credentials = new AWS.CognitoIdentityCredentials(credentialParams);
+                    AWS.config.credentials = credentials;
+
+                    AWS.config.credentials.refresh((error) => {
+                        if (error) {
+                            console.error(error);
+                        } else {
+                            console.log('Successfully logged!');
+                        }
+                    });
+                    window.location = "./home.html";
+                },
+                onFailure: function(err) {
+                    alert(err.message || JSON.stringify(err));
+                },
+                });
+            });
+            return true;
+        }
+
+        $('#signup_form').submit(function(e) {
+            e.preventDefault();
+            var attributeList = [];
+            var email = $('#email-input').val();
+            var password = $('#password-input').val();
+            console.log(email);
+            var dataName = {
+                Name : 'name',
+                Value : $('#username-input').val()
+            };
+            var attributeName = new AmazonCognitoIdentity.CognitoUserAttribute(dataName);
+            attributeList.push(attributeName);
+
+            userPool.signUp(email, password, attributeList, null, function(err, result){
+                if (err) {
+                    alert(err.message);
+                } else {
+                    dialog = $( "#dialog-form" ).dialog({
+                        autoOpen: false,
+                        height: 200,
+                        width: 350,
+                        modal: true,
+                        buttons: {
+                            "Submit": function () {
+                                confirmUser(email, password, $("#code").val());
+                            }
+                        }
+                    });
+                    dialog.dialog( "open" );
+                };
+            });
+        });
+    });
+</script>
+</body>
+</html>

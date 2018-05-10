@@ -1,0 +1,97 @@
+swagger: '2.0'
+info:
+  title: Movie API
+  description: 'Movie related API'
+  version: 1.0.0
+schemes:
+  - https
+basePath: /v1
+produces:
+  - application/json
+paths:
+  /moviebot:
+    post:
+      summary: The endpoint for the Movie API.
+      description: |
+        This API takes a uid or mid or search keyword from the client and returns one or more movies as a response.
+      tags:
+        - Movie
+      operationId: getMovie
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/BotRequest'
+      responses:
+        '200':
+          description: Movie response
+          schema:
+            $ref: '#/definitions/BotResponse'
+        '403':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  BotRequest:
+    type: object
+    properties:
+      messages:
+        type: array
+        items:
+          $ref: '#/definitions/Message'
+  BotResponse:
+    type: object
+    properties:
+      messages:
+        type: array
+        items:
+          $ref: '#/definitions/Message'
+  Message:
+    type: object
+    properties:
+      type:
+        type: string
+      unstructured:
+        $ref: '#/definitions/UnstructuredMessage'
+  UnstructuredMessage:
+    type: object
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+      poster:
+        type: string
+      overview:
+        type: string
+      release_date:
+        type: string
+        format: date
+      rating:
+        type: string
+      genre_ids:
+        type: array
+        items:
+          $ref: '#/definitions/GenreId'
+  GenreId:
+    type: object
+    propertitie:
+      genreid:
+        type: integer
+        format: int32
+
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
